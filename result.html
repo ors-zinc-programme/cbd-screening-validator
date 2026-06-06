@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CHW Screening Result</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #0f2444;
+  --navy-mid: #1a3a6b;
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --ok: #059669;
+  --ok-bg: #ecfdf5;
+  --ok-text: #065f46;
+  --err: #dc2626;
+  --err-bg: #fef2f2;
+  --err-text: #991b1b;
+  --surface: #ffffff;
+  --bg: #f1f5fb;
+  --line: #dde3ee;
+  --muted: #64748b;
+  --ink: #1e2a3a;
+  --radius: 16px;
+  --shadow: 0 1px 3px rgba(15,36,68,.07), 0 8px 30px rgba(15,36,68,.08);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  -webkit-font-smoothing: antialiased;
+}
+.container { width: 100%; max-width: 460px; }
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 36px 32px;
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+.logo {
+  width: 48px; height: 48px;
+  background: var(--navy);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 20px;
+}
+.logo svg { width: 24px; height: 24px; }
+h1 { font-size: 19px; font-weight: 600; letter-spacing: -.01em; margin-bottom: 6px; }
+.subtitle { color: var(--muted); font-size: 14px; line-height: 1.6; margin-bottom: 28px; }
+
+.field { text-align: left; margin-bottom: 16px; }
+label { display: block; font-size: 12.5px; font-weight: 500; color: var(--muted); margin-bottom: 6px; }
+input {
+  width: 100%; height: 48px; padding: 0 14px;
+  border: 1.5px solid var(--line); border-radius: 10px;
+  font-family: inherit; font-size: 15px; color: var(--ink); background: #fff;
+  transition: border-color .15s, box-shadow .15s;
+}
+input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
+
+.btn {
+  width: 100%; height: 50px; margin-top: 4px;
+  background: var(--accent); color: #fff; border: none; border-radius: 12px;
+  font-family: inherit; font-size: 15px; font-weight: 600; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: background .15s, transform .1s, box-shadow .15s;
+  box-shadow: 0 2px 8px rgba(37,99,235,.25);
+  text-decoration: none;
+}
+.btn:hover { background: var(--accent-hover); box-shadow: 0 4px 14px rgba(37,99,235,.35); }
+.btn:active { transform: scale(.985); }
+.btn:disabled { background: #94a3b8; box-shadow: none; cursor: not-allowed; }
+.btn svg { width: 18px; height: 18px; }
+.btn.ok { background: var(--ok); box-shadow: 0 2px 8px rgba(5,150,105,.25); }
+.btn.ok:hover { background: #047857; box-shadow: 0 4px 14px rgba(5,150,105,.35); }
+
+.spin { width: 18px; height: 18px; border: 2.5px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pop { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: scale(1); } }
+
+.result { animation: pop .3s ease; }
+.result-icon {
+  width: 72px; height: 72px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 18px;
+}
+.result-icon.pass { background: var(--ok-bg); }
+.result-icon.fail { background: var(--err-bg); }
+.result-icon svg { width: 36px; height: 36px; }
+.result-icon.pass svg { color: var(--ok); }
+.result-icon.fail svg { color: var(--err); }
+
+.score-display {
+  font-family: 'DM Mono', monospace;
+  font-size: 40px; font-weight: 500;
+  letter-spacing: -.02em; margin: 4px 0;
+}
+.score-display.pass { color: var(--ok-text); }
+.score-display.fail { color: var(--err-text); }
+.score-label { font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+.result-msg { font-size: 14px; color: var(--muted); line-height: 1.6; margin: 14px 0 24px; }
+.result-name { font-weight: 600; color: var(--ink); }
+
+.error-text { color: var(--err); font-size: 13px; margin-top: 12px; min-height: 18px; }
+.hidden { display: none; }
+.footer { text-align: center; color: var(--muted); font-size: 12px; margin-top: 20px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="card">
+
+    <!-- ── Lookup form ── -->
+    <div id="lookup-view">
+      <div class="logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      </div>
+      <h1>Check your screening result</h1>
+      <p class="subtitle">Enter the email you used on the screening form to view your result.</p>
+
+      <div class="field">
+        <label>Email address</label>
+        <input type="email" id="email-input" placeholder="you@example.com" autocomplete="email">
+      </div>
+      <button class="btn" id="check-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        Check result
+      </button>
+      <div class="error-text" id="error-text"></div>
+    </div>
+
+    <!-- ── Result view ── -->
+    <div id="result-view" class="result hidden">
+      <div class="result-icon" id="result-icon"></div>
+      <div class="score-label">Your score</div>
+      <div class="score-display" id="score-display"></div>
+      <div class="result-msg" id="result-msg"></div>
+      <div id="action-area"></div>
+    </div>
+
+  </div>
+  <div class="footer">CHW Programme</div>
+</div>
+
+<script>
+// ── Apps Script Web App URL ──
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwO6OKlz66hFDjMAOqSmyS5tAxU1XweNyz5vYG1rcQLbcxw6XbVL26E8TLNvWgtcEM4Cw/exec";
+
+const emailInput  = document.getElementById("email-input");
+const checkBtn    = document.getElementById("check-btn");
+const errorText   = document.getElementById("error-text");
+const lookupView  = document.getElementById("lookup-view");
+const resultView  = document.getElementById("result-view");
+
+checkBtn.addEventListener("click", checkResult);
+emailInput.addEventListener("keydown", e => { if (e.key === "Enter") checkResult(); });
+
+// Auto-fill email from URL if passed (?email=...)
+const urlEmail = new URLSearchParams(window.location.search).get("email");
+if (urlEmail) emailInput.value = decodeURIComponent(urlEmail);
+
+async function checkResult() {
+  const email = emailInput.value.trim();
+  errorText.textContent = "";
+
+  if (!email || !email.includes("@")) {
+    errorText.textContent = "Please enter a valid email address.";
+    return;
+  }
+
+  checkBtn.disabled = true;
+  checkBtn.innerHTML = '<div class="spin"></div> Checking…';
+
+  try {
+    const res  = await fetch(`${APPS_SCRIPT_URL}?action=checkemail&email=${encodeURIComponent(email)}`);
+    const data = await res.json();
+
+    if (!data.found) {
+      errorText.textContent = "No submission found for this email. Please check and try again.";
+      resetBtn();
+      return;
+    }
+
+    showResult(data);
+  } catch (e) {
+    errorText.textContent = "Could not reach the server. Check your connection and try again.";
+    resetBtn();
+  }
+}
+
+function resetBtn() {
+  checkBtn.disabled = false;
+  checkBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg> Check result';
+}
+
+function showResult(data) {
+  lookupView.classList.add("hidden");
+  resultView.classList.remove("hidden");
+
+  const icon   = document.getElementById("result-icon");
+  const score  = document.getElementById("score-display");
+  const msg    = document.getElementById("result-msg");
+  const action = document.getElementById("action-area");
+
+  score.textContent = `${data.score} / ${data.passScore}`;
+
+  if (data.passed) {
+    icon.className = "result-icon pass";
+    icon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
+    score.className = "score-display pass";
+    msg.innerHTML = `Congratulations <span class="result-name">${escHtml(data.name || "")}</span> — you passed the screening. Click below to validate your bank account details.`;
+
+    const link = data.validatorUrl
+      + "?ref=" + encodeURIComponent(data.ref)
+      + "&name=" + encodeURIComponent(data.name || "");
+
+    action.innerHTML = `<a class="btn ok" href="${link}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+      Validate my bank account</a>`;
+  } else {
+    icon.className = "result-icon fail";
+    icon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+    score.className = "score-display fail";
+    msg.innerHTML = `Thank you <span class="result-name">${escHtml(data.name || "")}</span>. Unfortunately you did not meet the minimum score of ${data.passScore} required at this time. Please contact your supervisor for guidance.`;
+    action.innerHTML = "";
+  }
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+</script>
+</body>
+</html>
