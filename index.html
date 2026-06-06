@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CHW Bank Account Validator</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root {
+  --navy: #0f2444;
+  --navy-mid: #1a3a6b;
+  --navy-soft: #e8eef8;
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --ok: #059669;
+  --ok-bg: #ecfdf5;
+  --ok-text: #065f46;
+  --err: #dc2626;
+  --err-bg: #fef2f2;
+  --err-text: #991b1b;
+  --surface: #ffffff;
+  --bg: #f1f5fb;
+  --line: #dde3ee;
+  --muted: #64748b;
+  --ink: #1e2a3a;
+  --radius: 14px;
+  --shadow: 0 1px 3px rgba(15,36,68,.07), 0 4px 16px rgba(15,36,68,.06);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Header ── */
+.header {
+  background: var(--navy);
+  padding: 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.header-inner {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 18px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.logo {
+  width: 36px; height: 36px;
+  background: var(--accent);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.logo svg { width: 18px; height: 18px; }
+.header-text h1 {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -.01em;
+  line-height: 1.2;
+}
+.header-text p {
+  color: rgba(255,255,255,.5);
+  font-size: 12px;
+  margin-top: 1px;
+}
+.chw-badge {
+  margin-left: auto;
+  background: rgba(255,255,255,.1);
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 99px;
+  padding: 4px 12px;
+  color: rgba(255,255,255,.85);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Gate screen ── */
+#gate-screen {
+  max-width: 480px;
+  margin: 80px auto;
+  padding: 0 24px;
+  text-align: center;
+}
+.gate-icon {
+  width: 64px; height: 64px;
+  background: var(--err-bg);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 20px;
+}
+.gate-icon svg { width: 28px; height: 28px; color: var(--err); }
+#gate-screen h2 { font-size: 20px; font-weight: 600; margin-bottom: 8px; }
+#gate-screen p { color: var(--muted); font-size: 14px; line-height: 1.6; }
+
+/* ── Main ── */
+main {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 28px 24px 80px;
+}
+
+/* ── Card ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 24px;
+  box-shadow: var(--shadow);
+  margin-bottom: 16px;
+}
+.card-title {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--muted);
+  margin-bottom: 18px;
+}
+
+/* ── Form fields ── */
+.field { margin-bottom: 14px; }
+.field:last-child { margin-bottom: 0; }
+label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+input, select {
+  width: 100%;
+  height: 46px;
+  padding: 0 14px;
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 15px;
+  color: var(--ink);
+  background: #fff;
+  transition: border-color .15s, box-shadow .15s;
+  appearance: none;
+  -webkit-appearance: none;
+}
+input[inputmode="numeric"], .mono {
+  font-family: 'DM Mono', monospace;
+  letter-spacing: .04em;
+}
+input:focus, select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+}
+input.has-value { border-color: #c7d2e8; }
+select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; cursor: pointer; }
+
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media(max-width: 520px) { .grid2 { grid-template-columns: 1fr; } }
+
+/* ── Digit counter ── */
+.digit-count {
+  font-size: 11.5px;
+  color: var(--muted);
+  margin-top: 5px;
+  font-family: 'DM Mono', monospace;
+  transition: color .15s;
+}
+.digit-count.ready { color: var(--ok); font-weight: 500; }
+.digit-count.over { color: var(--err); }
+
+/* ── Resolve button ── */
+.btn-resolve {
+  width: 100%;
+  height: 50px;
+  margin-top: 20px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background .15s, transform .1s, box-shadow .15s;
+  box-shadow: 0 2px 8px rgba(37,99,235,.25);
+}
+.btn-resolve:hover { background: var(--accent-hover); box-shadow: 0 4px 14px rgba(37,99,235,.35); }
+.btn-resolve:active { transform: scale(.985); }
+.btn-resolve:disabled { background: #94a3b8; box-shadow: none; cursor: not-allowed; }
+.btn-resolve svg { width: 18px; height: 18px; }
+
+/* ── Spinner ── */
+.spin {
+  width: 18px; height: 18px;
+  border: 2.5px solid rgba(255,255,255,.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Result box ── */
+.result-box {
+  margin-top: 16px;
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-size: 14px;
+  display: none;
+  animation: fadeIn .2s ease;
+}
+.result-box.ok { background: var(--ok-bg); border: 1px solid #a7f3d0; }
+.result-box.err { background: var(--err-bg); border: 1px solid #fecaca; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+.result-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 4px; }
+.result-box.ok .result-label { color: var(--ok); }
+.result-box.err .result-label { color: var(--err); }
+.result-name {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -.01em;
+  color: var(--ok-text);
+  margin-bottom: 10px;
+}
+.result-box.err .result-name { color: var(--err-text); font-size: 15px; }
+
+.btn-add {
+  height: 38px;
+  padding: 0 18px;
+  background: var(--ok);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background .15s;
+}
+.btn-add:hover { background: #047857; }
+.btn-add svg { width: 14px; height: 14px; }
+
+/* ── List card ── */
+.list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.list-count {
+  background: var(--navy-soft);
+  color: var(--navy-mid);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 99px;
+}
+
+.btn-download {
+  height: 40px;
+  padding: 0 18px;
+  background: var(--navy);
+  color: #fff;
+  border: none;
+  border-radius: 9px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  transition: background .15s;
+}
+.btn-download:hover { background: var(--navy-mid); }
+.btn-download:disabled { background: #94a3b8; cursor: not-allowed; }
+.btn-download svg { width: 15px; height: 15px; }
+
+/* ── Table ── */
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+th {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--muted);
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  background: #fafbfd;
+  text-align: left;
+  white-space: nowrap;
+}
+td { padding: 11px 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #fafbfd; }
+.td-name { font-weight: 500; color: var(--ink); }
+.td-acct { font-family: 'DM Mono', monospace; letter-spacing: .04em; color: var(--muted); font-size: 13px; }
+.td-bank { color: var(--muted); }
+.del-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #cbd5e1;
+  padding: 4px;
+  border-radius: 6px;
+  transition: color .15s, background .15s;
+  display: flex;
+  align-items: center;
+}
+.del-btn:hover { color: var(--err); background: var(--err-bg); }
+.empty-state {
+  padding: 32px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13.5px;
+}
+.empty-state svg { width: 32px; height: 32px; color: #cbd5e1; margin: 0 auto 10px; display: block; }
+
+/* ── Toast ── */
+#toast {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--navy);
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 99px;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: transform .3s cubic-bezier(.34,1.56,.64,1), opacity .3s;
+  opacity: 0;
+  z-index: 999;
+  pointer-events: none;
+  box-shadow: 0 4px 20px rgba(0,0,0,.2);
+}
+#toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M9 21V9"/></svg>
+    </div>
+    <div class="header-text">
+      <h1>CHW Bank Validator</h1>
+      <p>Paystack-powered account resolution</p>
+    </div>
+    <div class="chw-badge" id="chw-badge" style="display:none"></div>
+  </div>
+</div>
+
+<!-- Gate screen (shown if no ?ref= param) -->
+<div id="gate-screen" style="display:none">
+  <div class="gate-icon">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+  </div>
+  <h2>Access restricted</h2>
+  <p>This validator is only accessible after completing and passing the CHW screening form. Please complete the form first.</p>
+</div>
+
+<!-- Main validator (shown if ?ref= param exists) -->
+<main id="app" style="display:none">
+
+  <!-- Validate card -->
+  <div class="card">
+    <div class="card-title">Validate bank account</div>
+
+    <div class="field">
+      <label>CHW Name</label>
+      <input type="text" id="chw-name" placeholder="Full name" autocomplete="off">
+    </div>
+
+    <div class="grid2">
+      <div class="field" style="margin-bottom:0">
+        <label>Bank</label>
+        <select id="bank-select">
+          <option value="">Select bank…</option>
+        </select>
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label>Account number</label>
+        <input type="text" id="acct-input" inputmode="numeric" maxlength="10" placeholder="0000000000" autocomplete="off">
+        <div class="digit-count" id="digit-count">0 / 10 digits</div>
+      </div>
+    </div>
+
+    <button class="btn-resolve" id="resolve-btn" disabled>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      Resolve account name
+    </button>
+
+    <div class="result-box" id="result-box">
+      <div class="result-label" id="result-label"></div>
+      <div class="result-name" id="result-name"></div>
+      <button class="btn-add" id="add-btn" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+        Add to list
+      </button>
+    </div>
+  </div>
+
+  <!-- List card -->
+  <div class="card">
+    <div class="list-header">
+      <div>
+        <div class="card-title" style="margin-bottom:4px">Validated list</div>
+        <span class="list-count" id="list-count">0 accounts</span>
+      </div>
+      <button class="btn-download" id="download-btn" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download Excel
+      </button>
+    </div>
+
+    <div class="table-wrap" id="table-wrap">
+      <div class="empty-state" id="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10,9 9,9 8,9"/></svg>
+        No validated accounts yet. Resolve an account above to begin.
+      </div>
+      <table id="list-table" style="display:none">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Account name</th>
+            <th>Bank</th>
+            <th>Account no.</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="list-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<div id="toast"></div>
+
+<script>
+// ── Nigerian banks list ──
+const BANKS = [
+  ["Access Bank","044"],["Citibank","023"],["Ecobank","050"],["Fidelity Bank","070"],
+  ["First Bank","011"],["First City Monument Bank","214"],["Globus Bank","00103"],
+  ["Guaranty Trust Bank","058"],["Heritage Bank","030"],["Jaiz Bank","301"],
+  ["Keystone Bank","082"],["Kuda Bank","090267"],["Moniepoint MFB","50515"],
+  ["OPay","100004"],["Opay Digital Services","304"],["Palmpay","100033"],
+  ["Parallex Bank","526"],["Polaris Bank","076"],["Providus Bank","101"],
+  ["Stanbic IBTC","039"],["Standard Chartered","068"],["Sterling Bank","232"],
+  ["SunTrust Bank","100"],["Titan Trust Bank","102"],["Union Bank","032"],
+  ["United Bank for Africa","033"],["Unity Bank","215"],["VFD Microfinance Bank","566"],
+  ["Wema Bank","035"],["Zenith Bank","057"],["Carbon","565"],["Taj Bank","302"],
+  ["Lotus Bank","303"],["Safe Haven MFB","51204"],["Sparkle MFB","51310"],
+  ["Eyowo","50126"],["9PSB","120001"],["Rubies MFB","125"],["Mint MFB","50304"]
+].sort((a,b) => a[0].localeCompare(b[0]));
+
+// ── Apps Script Web App URL ──
+// Replace with your deployed Apps Script Web App URL
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwO6OKlz66hFDjMAOqSmyS5tAxU1XweNyz5vYG1rcQLbcxw6XbVL26E8TLNvWgtcEM4Cw/exec";
+
+// ── State ──
+let records = [];
+let resolvedRecord = null;
+
+// ── Init ──
+function init() {
+  // Populate bank dropdown
+  const sel = document.getElementById("bank-select");
+  BANKS.forEach(([name, code]) => {
+    const opt = document.createElement("option");
+    opt.value = code;
+    opt.textContent = name;
+    sel.appendChild(opt);
+  });
+
+  // Check for ?ref= param (gate)
+  const params = new URLSearchParams(window.location.search);
+  const ref = params.get("ref");
+  const name = params.get("name");
+
+  if (!ref) {
+    document.getElementById("gate-screen").style.display = "block";
+    return;
+  }
+
+  document.getElementById("app").style.display = "block";
+
+  // Pre-fill CHW name if passed in URL
+  if (name) {
+    const decoded = decodeURIComponent(name);
+    document.getElementById("chw-name").value = decoded;
+    document.getElementById("chw-badge").textContent = decoded;
+    document.getElementById("chw-badge").style.display = "block";
+  }
+
+  bindEvents();
+}
+
+function bindEvents() {
+  const acctInput = document.getElementById("acct-input");
+  const bankSel = document.getElementById("bank-select");
+  const resolveBtn = document.getElementById("resolve-btn");
+
+  acctInput.addEventListener("input", () => {
+    // Strip non-digits
+    acctInput.value = acctInput.value.replace(/\D/g, "").slice(0, 10);
+    const n = acctInput.value.length;
+    const dc = document.getElementById("digit-count");
+    dc.textContent = `${n} / 10 digits`;
+    dc.className = "digit-count" + (n === 10 ? " ready" : n > 10 ? " over" : "");
+    checkReady();
+    clearResult();
+  });
+
+  bankSel.addEventListener("change", () => { checkReady(); clearResult(); });
+
+  resolveBtn.addEventListener("click", resolveAccount);
+
+  document.getElementById("add-btn").addEventListener("click", addToList);
+  document.getElementById("download-btn").addEventListener("click", downloadExcel);
+}
+
+function checkReady() {
+  const ready = document.getElementById("acct-input").value.length === 10 &&
+                document.getElementById("bank-select").value !== "";
+  document.getElementById("resolve-btn").disabled = !ready;
+}
+
+function clearResult() {
+  resolvedRecord = null;
+  const rb = document.getElementById("result-box");
+  rb.style.display = "none";
+  rb.className = "result-box";
+  document.getElementById("add-btn").style.display = "none";
+}
+
+async function resolveAccount() {
+  const acct = document.getElementById("acct-input").value;
+  const bankCode = document.getElementById("bank-select").value;
+  const bankName = document.getElementById("bank-select").selectedOptions[0].text;
+  const btn = document.getElementById("resolve-btn");
+
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spin"></div> Resolving…';
+
+  try {
+    const res = await fetch(
+      `${APPS_SCRIPT_URL}?action=resolve&account_number=${acct}&bank_code=${bankCode}`
+    );
+    const data = await res.json();
+
+    if (data.status && data.data?.account_name) {
+      showResult("ok", "Account resolved", data.data.account_name);
+      resolvedRecord = {
+        name: data.data.account_name,
+        bank: bankName,
+        bankCode,
+        acct
+      };
+    } else {
+      showResult("err", "Could not resolve", data.message || "Account not found. Check the number and bank.");
+      resolvedRecord = null;
+    }
+  } catch (e) {
+    showResult("err", "Network error", "Could not reach Paystack. Check your connection.");
+    resolvedRecord = null;
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg> Resolve account name`;
+  checkReady();
+}
+
+function showResult(type, label, message) {
+  const rb = document.getElementById("result-box");
+  rb.style.display = "block";
+  rb.className = "result-box " + type;
+  document.getElementById("result-label").textContent = label;
+  document.getElementById("result-name").textContent = message;
+  document.getElementById("add-btn").style.display = type === "ok" ? "inline-flex" : "none";
+}
+
+function addToList() {
+  if (!resolvedRecord) return;
+
+  // Check for duplicate account number
+  if (records.find(r => r.acct === resolvedRecord.acct)) {
+    toast("Account already in list");
+    return;
+  }
+
+  records.push({ ...resolvedRecord });
+  renderList();
+
+  // Save to Google Sheet in background
+  saveToSheet(resolvedRecord);
+
+  clearResult();
+
+  // Reset form fields
+  document.getElementById("acct-input").value = "";
+  document.getElementById("bank-select").value = "";
+  document.getElementById("digit-count").textContent = "0 / 10 digits";
+  document.getElementById("digit-count").className = "digit-count";
+  document.getElementById("resolve-btn").disabled = true;
+
+  toast("Added to list ✓");
+}
+
+async function saveToSheet(record) {
+  try {
+    const params = new URLSearchParams({
+      action:       "save",
+      ref:          new URLSearchParams(window.location.search).get("ref") || "",
+      chw_name:     document.getElementById("chw-name").value || "",
+      account_name: record.name,
+      bank_name:    record.bank,
+      bank_code:    record.bankCode,
+      account_no:   record.acct
+    });
+    await fetch(`${APPS_SCRIPT_URL}?${params}`);
+  } catch (e) {
+    // Silent fail — data is still in the downloadable Excel
+  }
+}
+
+function renderList() {
+  const tbody = document.getElementById("list-body");
+  const table = document.getElementById("list-table");
+  const empty = document.getElementById("empty-state");
+  const count = document.getElementById("list-count");
+  const dlBtn = document.getElementById("download-btn");
+
+  count.textContent = `${records.length} account${records.length !== 1 ? "s" : ""}`;
+  dlBtn.disabled = records.length === 0;
+
+  if (records.length === 0) {
+    table.style.display = "none";
+    empty.style.display = "block";
+    return;
+  }
+
+  table.style.display = "table";
+  empty.style.display = "none";
+
+  tbody.innerHTML = records.map((r, i) => `
+    <tr>
+      <td style="color:var(--muted);font-size:12px">${i + 1}</td>
+      <td class="td-name">${escHtml(r.name)}</td>
+      <td class="td-bank">${escHtml(r.bank)}</td>
+      <td class="td-acct">${r.acct}</td>
+      <td>
+        <button class="del-btn" onclick="delRecord(${i})" title="Remove">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3,6 5,6 21,6"/><path d="M19,6l-1,14a2,2,0,0,1-2,2H8a2,2,0,0,1-2-2L5,6"/><path d="M10,11v6M14,11v6"/><path d="M9,6V4a1,1,0,0,1,1-1h4a1,1,0,0,1,1,1v2"/></svg>
+        </button>
+      </td>
+    </tr>
+  `).join("");
+}
+
+window.delRecord = function(i) {
+  records.splice(i, 1);
+  renderList();
+  toast("Removed");
+};
+
+function downloadExcel() {
+  if (records.length === 0) return;
+
+  const aoa = [["Account Name", "Bank Name", "Bank Code", "Account Number"]];
+  records.forEach(r => aoa.push([r.name, r.bank, r.bankCode, r.acct]));
+
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  // Force account number and bank code as text
+  for (let i = 1; i <= records.length; i++) {
+    const codeCell = ws[XLSX.utils.encode_cell({ r: i, c: 2 })];
+    const acctCell = ws[XLSX.utils.encode_cell({ r: i, c: 3 })];
+    if (codeCell) { codeCell.t = "s"; codeCell.z = "@"; }
+    if (acctCell) { acctCell.t = "s"; acctCell.z = "@"; }
+  }
+  ws["!cols"] = [{ wch: 26 }, { wch: 22 }, { wch: 10 }, { wch: 14 }];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Validated Accounts");
+
+  const date = new Date().toISOString().slice(0, 10);
+  const fname = `CHW_validated_accounts_${date}.xlsx`;
+
+  const blob = new Blob(
+    [XLSX.write(wb, { bookType: "xlsx", type: "array" })],
+    { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }
+  );
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = fname;
+  a.click();
+  toast("Downloading…");
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove("show"), 2400);
+}
+
+init();
+</script>
+</body>
+</html>
