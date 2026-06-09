@@ -136,8 +136,8 @@ select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
       <div class="success-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
       </div>
-      <h2>Submitted successfully</h2>
-      <p>The validated account for <span class="saved-name" id="saved-name"></span> has been recorded.</p>
+      <h2 id="success-title">Submitted successfully</h2>
+      <p id="save-note">The validated account has been recorded.</p>
     </div>
   </div>
 </main>
@@ -293,7 +293,18 @@ async function submitAccount() {
       function(n){ btn.innerHTML = '<div class="spin" style="border-color:rgba(255,255,255,.3);border-top-color:#fff"></div> Server busy — retrying… (' + n + ')'; }
     );
     if (data.status) {
-      document.getElementById("saved-name").textContent = resolved.name;
+      const already = /already/i.test(data.message || "");
+      document.getElementById("success-title").textContent = already ? "Already submitted" : "Submitted successfully";
+      const note = document.getElementById("save-note");
+      note.textContent = "";
+      const nameSpan = document.createElement("span");
+      nameSpan.className = "saved-name";
+      nameSpan.textContent = resolved.name;
+      if (already) {
+        note.append("The account for ", nameSpan, " was already recorded — you're all set.");
+      } else {
+        note.append("The validated account for ", nameSpan, " has been recorded.");
+      }
       document.getElementById("input-view").style.display = "none";
       document.getElementById("success-view").classList.add("show");
     } else {
