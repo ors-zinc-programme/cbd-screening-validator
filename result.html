@@ -51,6 +51,7 @@ input:disabled { background: #f1f5f9; color: var(--muted); cursor: not-allowed; 
 .result-msg { font-size: 14px; color: var(--muted); line-height: 1.6; margin: 14px 0 24px; }
 .result-name { font-weight: 600; color: var(--ink); }
 .error-text { color: var(--err); font-size: 13px; margin-top: 12px; min-height: 18px; }
+.attempt-flag { margin: 0 0 16px; padding: 10px 12px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; color: #92400e; font-size: 13px; line-height: 1.5; text-align: left; }
 .hidden { display: none; }
 .footer { text-align: center; color: var(--muted); font-size: 12px; margin-top: 20px; }
 </style>
@@ -80,6 +81,7 @@ input:disabled { background: #f1f5f9; color: var(--muted); cursor: not-allowed; 
       <div class="score-label">Your score</div>
       <div class="score-display" id="score-display"></div>
       <div class="result-msg" id="result-msg"></div>
+      <div id="attempt-flag" class="attempt-flag hidden"></div>
       <div id="action-area"></div>
     </div>
   </div>
@@ -166,6 +168,14 @@ function showResult(data) {
   const msg    = document.getElementById("result-msg");
   const action = document.getElementById("action-area");
   score.textContent = data.score + " / " + (data.totalMarks || data.passScore);
+
+  const flag = document.getElementById("attempt-flag");
+  if (data.multipleAttempts) {
+    flag.textContent = "Note: more than one attempt was recorded for this NIN. Your first attempt is the one that counts — please see your supervisor if you have a question.";
+    flag.classList.remove("hidden");
+  } else {
+    flag.classList.add("hidden");
+  }
   if (data.passed) {
     icon.className = "result-icon pass";
     icon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
